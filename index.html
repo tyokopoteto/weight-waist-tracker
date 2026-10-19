@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f7fb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="体重記録">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon.svg">
+<title>体重・ウエスト記録</title>
+<style>
+:root{color-scheme:light;--ink:#182438;--muted:#65738a;--blue:#2563eb;--line:#e2e8f0;--card:#fff;--input:#fff4cf}
+*{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:720px;margin:auto;padding:22px 16px 44px}
+h1{font-size:24px;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 3px 14px #192b4610}
+h2{font-size:16px;margin:0 0 14px}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:13px;font-weight:650;color:#40506a}
+input{font:inherit}
+input[type=date],input[type=number]{display:block;width:100%;margin-top:6px;border:1px solid #e7d88e;background:var(--input);border-radius:11px;padding:12px;color:var(--ink);font-size:16px;min-height:46px}
+button{font:inherit;font-weight:650;border:0;border-radius:11px;padding:12px 15px;cursor:pointer}
+.primary{background:var(--blue);color:white;min-height:46px}
+.form .primary{grid-column:1/-1}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{border-radius:13px;background:#f0f5ff;padding:13px}
+.metric small{color:var(--muted);display:block;font-size:12px}.metric strong{display:block;font-size:25px;margin-top:3px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.secondary{background:#edf1f7;color:#334155;font-size:13px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;color:#fff;background:#1f4e78;padding:11px 9px;white-space:nowrap}
+th:first-child{border-radius:9px 0 0 0}th:last-child{border-radius:0 9px 0 0}
+td{padding:10px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums}td.action{text-align:right}
+.del{background:transparent;color:#64748b;padding:6px 8px;font-size:12px}
+.note{color:var(--muted);font-size:12px;line-height:1.55;margin:12px 2px 0}
+.empty{text-align:center;color:var(--muted);padding:24px 8px}
+@media(max-width:460px){main{padding:17px 12px 30px}.card{padding:15px;border-radius:15px}.form{gap:10px}td,th{padding:9px 6px;font-size:12px}.del{padding:5px 2px}.metric strong{font-size:22px}}
+</style>
+</head>
+<body>
+<main>
+<h1>体重・ウエスト記録</h1>
+<p class="sub">毎日の数値を記録して、直近14日間の平均を確認できます。</p>
+<section class="card">
+<h2>今日の記録</h2>
+<form id="entryForm" class="form">
+<label>日付<input id="date" type="date" required></label>
+<label>体重 (kg)<input id="weight" type="number" inputmode="decimal" min="0" max="500" step="0.1" placeholder="例 76.3"></label>
+<label>ウエスト (cm)<input id="waist" type="number" inputmode="decimal" min="0" max="300" step="0.1" placeholder="例 82.0"></label>
+<button class="primary" type="submit">記録する</button>
+</form>
+<p class="note">日付を選んで体重かウエストを入力し、「記録する」を押してください。同じ日付にもう一度保存すると、その日の数値を更新します。</p>
+</section>
+<section class="card">
+<h2>直近14日間の平均 <span id="period" class="note"></span></h2>
+<div class="summary">
+<div class="metric"><small>体重・入力日数</small><strong id="avgWeight">—</strong><small id="countWeight">0日</small></div>
+<div class="metric"><small>ウエスト・入力日数</small><strong id="avgWaist">—</strong><small id="countWaist">0日</small></div>
+</div>
+</section>
+<section class="card">
+<h2>記録一覧 <span id="recordCount" class="note"></span></h2>
+<div style="overflow-x:auto">
+<table><thead><tr><th>日付</th><th style="text-align:right">体重 (kg)</th><th style="text-align:right">ウエスト (cm)</th><th style="text-align:right" title="計測日を含む14日間。未記録日は除外">14日平均 (kg)</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+</div>
+<div id="empty" class="empty" hidden>記録はまだありません。</div>
+<div class="actions">
+<button id="backup" class="secondary" type="button">バックアップを保存</button>
+<button id="restore" class="secondary" type="button">バックアップを読み込む</button>
+<input id="file" type="file" accept="application/json,.json" hidden>
+</div>
+<p class="note">記録はこの端末のブラウザ内に保存され、ChatGPTには送信されません。端末やブラウザを変える場合は、バックアップを保存して読み込んでください。</p>
+</section>
+</main>
+<script>
+const KEY="weight-waist-tracker-phone-v1";
+const initial=[];
+const $=id=>document.getElementById(id);
+const localDate=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")};
+function read(){try{const v=JSON.parse(localStorage.getItem(KEY));return Array.isArray(v)?v:initial.slice()}catch{return initial.slice()}}
+let records=read();
+if(!localStorage.getItem(KEY)){localStorage.setItem(KEY,JSON.stringify(records))}
+$("date").value=localDate();
+function fmtDate(s){const [y,m,d]=s.split("-");return y+"年"+Number(m)+"月"+Number(d)+"日"}
+function shiftDate(s,days){const d=new Date(s+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10)}
+function avgWeightThrough(date){const start=shiftDate(date,-13);const vals=records.filter(r=>r.date>=start&&r.date<=date).map(r=>Number(r.weight)).filter(v=>Number.isFinite(v)&&v>0);return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):"—"}
+function show(){
+ records.sort((a,b)=>b.date.localeCompare(a.date));
+ const today=localDate(),from=new Date();from.setDate(from.getDate()-13);
+ const start=[from.getFullYear(),String(from.getMonth()+1).padStart(2,"0"),String(from.getDate()).padStart(2,"0")].join("-");
+ $("period").textContent=fmtDate(start)+" 〜 "+fmtDate(today);
+ const recent=records.filter(r=>r.date>=start&&r.date<=today);
+ for(const [field,id,countId,unit] of [["weight","avgWeight","countWeight","kg"],["waist","avgWaist","countWaist","cm"]]){
+  const vals=recent.map(r=>Number(r[field])).filter(v=>Number.isFinite(v)&&v>0);
+  $(id).textContent=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1)+" "+unit:"—";
+  $(countId).textContent=vals.length+"日";
+ }
+ $("recordCount").textContent="("+records.length+"件)";
+ $("empty").hidden=records.length>0;
+ $("rows").innerHTML=records.map((r,i)=>"<tr><td>"+fmtDate(r.date)+"</td><td class='num'>"+(r.weight==null?"—":Number(r.weight).toFixed(1))+"</td><td class='num'>"+(r.waist==null?"—":Number(r.waist).toFixed(1))+"</td><td class='num'>"+avgWeightThrough(r.date)+"</td><td class='action'><button class='del' type='button' data-index='"+i+"' aria-label='削除'>削除</button></td></tr>").join("");
+ localStorage.setItem(KEY,JSON.stringify(records));
+}
+$("entryForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const date=$("date").value,w=$("weight").value,c=$("waist").value;
+ if(!date||(!w&&!c)){alert("日付と、体重かウエストのどちらかを入力してください。");return}
+ let r=records.find(x=>x.date===date);
+ if(!r){r={date,weight:null,waist:null};records.push(r)}
+ if(w)r.weight=Number(w); if(c)r.waist=Number(c);
+ $("weight").value="";$("waist").value="";
+ show();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+});
+$("rows").addEventListener("click",e=>{
+ const b=e.target.closest("[data-index]");if(!b)return;
+ const r=records[Number(b.dataset.index)];
+ if(confirm(fmtDate(r.date)+"の記録を削除しますか？")){records.splice(Number(b.dataset.index),1);show()}
+});
+$("backup").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(records,null,2)],{type:"application/json"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="体重ウエスト記録バックアップ.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+});
+$("restore").addEventListener("click",()=>$("file").click());
+$("file").addEventListener("change",async e=>{
+ const f=e.target.files[0];if(!f)return;
+ try{const d=JSON.parse(await f.text());if(!Array.isArray(d)||d.some(r=>!/^\d{4}-\d\d-\d\d$/.test(r.date)||(!Number.isFinite(r.weight)&&r.weight!==null)||(!Number.isFinite(r.waist)&&r.waist!==null)))throw Error();
+ if(confirm("現在の記録をバックアップの内容に置き換えますか？")){records=d;show()}
+ }catch{alert("このバックアップファイルは読み込めませんでした。")}
+ e.target.value="";
+});
+show();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+</script>
+</body>
+</html>
