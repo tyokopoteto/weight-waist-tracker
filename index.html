@@ -79,6 +79,22 @@ const KEY="weight-waist-tracker-phone-v1";
 const initial=[];
 const $=id=>document.getElementById(id);
 const localDate=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")};
+function importFromLink(){
+ if(!location.hash.startsWith("#import="))return;
+ try{
+  const encoded=location.hash.slice(8).replace(/-/g,"+").replace(/_/g,"/");
+  const data=JSON.parse(atob(encoded.padEnd(Math.ceil(encoded.length/4)*4,"=")));
+  if(!Array.isArray(data)||data.some(r=>!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(r.date)||(!Number.isFinite(r.weight)&&r.weight!==null)||(!Number.isFinite(r.waist)&&r.waist!==null)))return;
+  const current=JSON.parse(localStorage.getItem(KEY)||"[]");
+  if(Array.isArray(current)){
+   const merged=new Map(data.map(r=>[r.date,r]));
+   current.forEach(r=>merged.set(r.date,r));
+   localStorage.setItem(KEY,JSON.stringify(Array.from(merged.values())));
+  }
+  history.replaceState(null,"",location.pathname+location.search);
+ }catch{}
+}
+importFromLink();
 function read(){try{const v=JSON.parse(localStorage.getItem(KEY));return Array.isArray(v)?v:initial.slice()}catch{return initial.slice()}}
 let records=read();
 if(!localStorage.getItem(KEY)){localStorage.setItem(KEY,JSON.stringify(records))}
