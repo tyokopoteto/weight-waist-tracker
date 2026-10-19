@@ -16,10 +16,10 @@
 main{max-width:720px;margin:auto;padding:22px 16px 44px}
 h1{font-size:24px;margin:6px 0 4px}.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 3px 14px #192b4610}
-h2{font-size:16px;margin:0 0 14px}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-label{display:block;font-size:13px;font-weight:650;color:#40506a}
+h2{font-size:16px;margin:0 0 14px}.form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+label{display:block;min-width:0;font-size:13px;font-weight:650;color:#40506a}
 input{font:inherit}
-input[type=date],input[type=number]{display:block;width:100%;margin-top:6px;border:1px solid #e7d88e;background:var(--input);border-radius:11px;padding:12px;color:var(--ink);font-size:16px;min-height:46px}
+input[type=date],input[type=number]{display:block;width:100%;min-width:0;max-width:100%;margin-top:6px;border:1px solid #e7d88e;background:var(--input);border-radius:11px;padding:12px;color:var(--ink);font-size:16px;min-height:46px}
 button{font:inherit;font-weight:650;border:0;border-radius:11px;padding:12px 15px;cursor:pointer}
 .primary{background:var(--blue);color:white;min-height:46px}
 .form .primary{grid-column:1/-1}
@@ -36,7 +36,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}td.action{text-align:r
 .del{background:transparent;color:#64748b;padding:6px 8px;font-size:12px}
 .note{color:var(--muted);font-size:12px;line-height:1.55;margin:12px 2px 0}
 .empty{text-align:center;color:var(--muted);padding:24px 8px}
-@media(max-width:460px){main{padding:17px 12px 30px}.card{padding:15px;border-radius:15px}.form{gap:10px}td,th{padding:9px 6px;font-size:12px}.del{padding:5px 2px}.metric strong{font-size:22px}}
+@media(max-width:600px){main{padding:16px 12px 30px}.card{padding:15px;border-radius:15px}.form{grid-template-columns:minmax(0,1fr);gap:10px}.form .primary{grid-column:1}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{min-width:0;padding:11px 10px}.metric strong{font-size:22px}.actions button{flex:1 1 150px;min-height:44px}td,th{padding:9px 6px;font-size:12px}.del{padding:5px 2px}}
 </style>
 </head>
 <body>
