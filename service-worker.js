@@ -1,4 +1,4 @@
-const CACHE_NAME = "weight-waist-v4";
+const CACHE_NAME = "weight-waist-v5";
 const ASSETS = ["./?v=2", "./", "./index.html", "./manifest.webmanifest", "./icon.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));

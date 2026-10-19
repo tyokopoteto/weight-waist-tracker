@@ -9,7 +9,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="./icon.svg">
-<title>体重・ウエスト記録</title>
+<title>体重・ウエスト・ヒップ記録</title>
 <style>
 :root{color-scheme:light;--ink:#182438;--muted:#65738a;--blue:#2563eb;--line:#e2e8f0;--card:#fff;--input:#fff4cf}
 *{box-sizing:border-box}html,body{width:100%;max-width:100%;overflow-x:hidden}body{margin:0;background:#f4f6fa;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -24,7 +24,7 @@ input[type=date]{-webkit-appearance:none;appearance:none}
 button{font:inherit;font-weight:650;border:0;border-radius:11px;padding:12px 15px;cursor:pointer}
 .primary{background:var(--blue);color:white;min-height:46px}
 .form .primary{grid-column:1/-1}
-.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .metric{border-radius:13px;background:#f0f5ff;padding:13px}
 .metric small{color:var(--muted);display:block;font-size:12px}.metric strong{display:block;font-size:25px;margin-top:3px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -37,12 +37,12 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}td.action{text-align:r
 .del{background:transparent;color:#64748b;padding:6px 8px;font-size:12px}
 .note{color:var(--muted);font-size:12px;line-height:1.55;margin:12px 2px 0}
 .empty{text-align:center;color:var(--muted);padding:24px 8px}
-@media(max-width:600px){main{padding:16px 12px 30px}.card{padding:15px;border-radius:15px}.form{grid-template-columns:minmax(0,1fr);gap:10px}.form label{width:100%;overflow:hidden}.form input{width:100%;max-width:100%;min-width:0}.form .primary{grid-column:1}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{min-width:0;padding:11px 10px}.metric strong{font-size:22px}.actions button{flex:1 1 150px;min-height:44px}.table-wrap{width:100%;max-width:100%;overflow:visible!important}table{display:block;width:100%;max-width:100%;font-size:13px}thead{display:none}tbody{display:grid;gap:9px}tbody tr{min-width:0;max-width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 36px;gap:4px;border:1px solid var(--line);border-radius:12px;padding:9px 6px}tbody td{min-width:0;white-space:normal;border:0;padding:4px;font-size:12px;line-height:1.35}tbody td:first-child{grid-column:1/-1;font-size:13px;font-weight:700;border-bottom:1px solid var(--line);padding-bottom:7px;margin-bottom:3px}tbody td:not(:first-child)::before{content:attr(data-label);display:block;white-space:normal;font-size:10px;color:var(--muted);font-weight:500;margin-bottom:3px}tbody td.num{text-align:left;font-weight:650}tbody td.action{grid-column:4;grid-row:2;align-self:end;text-align:right}tbody td.action::before{display:none}.del{padding:5px 2px}}
+@media(max-width:600px){main{padding:16px 12px 30px}.card{padding:15px;border-radius:15px}.form{grid-template-columns:minmax(0,1fr);gap:10px}.form label{width:100%;overflow:hidden}.form input{width:100%;max-width:100%;min-width:0}.form .primary{grid-column:1}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{min-width:0;padding:11px 10px}.metric strong{font-size:22px}.actions button{flex:1 1 150px;min-height:44px}.table-wrap{width:100%;max-width:100%;overflow:visible!important}table{display:block;width:100%;max-width:100%;font-size:13px}thead{display:none}tbody{display:grid;gap:9px}tbody tr{min-width:0;max-width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;border:1px solid var(--line);border-radius:12px;padding:9px 6px}tbody td{min-width:0;white-space:normal;border:0;padding:4px;font-size:12px;line-height:1.35}tbody td:first-child{grid-column:1/-1;font-size:13px;font-weight:700;border-bottom:1px solid var(--line);padding-bottom:7px;margin-bottom:3px}tbody td:not(:first-child)::before{content:attr(data-label);display:block;white-space:normal;font-size:10px;color:var(--muted);font-weight:500;margin-bottom:3px}tbody td.num{text-align:left;font-weight:650}tbody td.action{grid-column:1/-1;align-self:end;text-align:right}tbody td.action::before{display:none}.del{padding:5px 2px}}
 </style>
 </head>
 <body>
 <main>
-<h1>体重・ウエスト記録</h1>
+<h1>体重・ウエスト・ヒップ記録</h1>
 <p class="sub">毎日の数値を記録して、直近14日間の平均を確認できます。</p>
 <section class="card">
 <h2>今日の記録</h2>
@@ -50,21 +50,23 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}td.action{text-align:r
 <label>日付<input id="date" type="date" required></label>
 <label>体重 (kg)<input id="weight" type="number" inputmode="decimal" min="0" max="500" step="0.1" placeholder="例 76.3"></label>
 <label>ウエスト (cm)<input id="waist" type="number" inputmode="decimal" min="0" max="300" step="0.1" placeholder="例 82.0"></label>
+<label>ヒップ (cm)<input id="hip" type="number" inputmode="decimal" min="0" max="300" step="0.1" placeholder="例 95.0"></label>
 <button class="primary" type="submit">記録する</button>
 </form>
-<p class="note">日付を選んで体重かウエストを入力し、「記録する」を押してください。同じ日付にもう一度保存すると、その日の数値を更新します。</p>
+<p class="note">日付を選んで体重・ウエスト・ヒップのいずれかを入力し、「記録する」を押してください。同じ日付にもう一度保存すると、その日の数値を更新します。</p>
 </section>
 <section class="card">
 <h2>直近14日間の平均 <span id="period" class="note"></span></h2>
 <div class="summary">
 <div class="metric"><small>体重・入力日数</small><strong id="avgWeight">—</strong><small id="countWeight">0日</small></div>
 <div class="metric"><small>ウエスト・入力日数</small><strong id="avgWaist">—</strong><small id="countWaist">0日</small></div>
+<div class="metric"><small>ヒップ・入力日数</small><strong id="avgHip">—</strong><small id="countHip">0日</small></div>
 </div>
 </section>
 <section class="card">
 <h2>記録一覧 <span id="recordCount" class="note"></span></h2>
 <div class="table-wrap">
-<table><thead><tr><th>日付</th><th style="text-align:right">体重 (kg)</th><th style="text-align:right">ウエスト (cm)</th><th style="text-align:right" title="計測日を含む14日間。未記録日は除外">14日平均 (kg)</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+<table><thead><tr><th>日付</th><th style="text-align:right">体重 (kg)</th><th style="text-align:right">ウエスト (cm)</th><th style="text-align:right">ヒップ (cm)</th><th style="text-align:right" title="計測日を含む14日間。未記録日は除外">14日平均 (kg)</th><th></th></tr></thead><tbody id="rows"></tbody></table>
 </div>
 <div id="empty" class="empty" hidden>記録はまだありません。</div>
 <div class="actions">
@@ -85,7 +87,7 @@ function importFromLink(){
  try{
   const encoded=location.hash.slice(8).replace(/-/g,"+").replace(/_/g,"/");
   const data=JSON.parse(atob(encoded.padEnd(Math.ceil(encoded.length/4)*4,"=")));
-  if(!Array.isArray(data)||data.some(r=>!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(r.date)||(!Number.isFinite(r.weight)&&r.weight!==null)||(!Number.isFinite(r.waist)&&r.waist!==null)))return;
+  if(!Array.isArray(data)||data.some(r=>!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(r.date)||(!Number.isFinite(r.weight)&&r.weight!==null)||(!Number.isFinite(r.waist)&&r.waist!==null)||(r.hip!=null&&!Number.isFinite(r.hip))))return;
   const current=JSON.parse(localStorage.getItem(KEY)||"[]");
   if(Array.isArray(current)){
    const merged=new Map(data.map(r=>[r.date,r]));
@@ -109,24 +111,24 @@ function show(){
  const start=[from.getFullYear(),String(from.getMonth()+1).padStart(2,"0"),String(from.getDate()).padStart(2,"0")].join("-");
  $("period").textContent=fmtDate(start)+" 〜 "+fmtDate(today);
  const recent=records.filter(r=>r.date>=start&&r.date<=today);
- for(const [field,id,countId,unit] of [["weight","avgWeight","countWeight","kg"],["waist","avgWaist","countWaist","cm"]]){
+ for(const [field,id,countId,unit] of [["weight","avgWeight","countWeight","kg"],["waist","avgWaist","countWaist","cm"],["hip","avgHip","countHip","cm"]]){
   const vals=recent.map(r=>Number(r[field])).filter(v=>Number.isFinite(v)&&v>0);
   $(id).textContent=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1)+" "+unit:"—";
   $(countId).textContent=vals.length+"日";
  }
  $("recordCount").textContent="("+records.length+"件)";
  $("empty").hidden=records.length>0;
- $("rows").innerHTML=records.map((r,i)=>"<tr><td>"+fmtDate(r.date)+"</td><td class='num' data-label='体重 (kg)'>"+(r.weight==null?"—":Number(r.weight).toFixed(1))+"</td><td class='num' data-label='ウエスト (cm)'>"+(r.waist==null?"—":Number(r.waist).toFixed(1))+"</td><td class='num' data-label='14日平均 (kg)'>"+avgWeightThrough(r.date)+"</td><td class='action'><button class='del' type='button' data-index='"+i+"' aria-label='削除'>削除</button></td></tr>").join("");
+ $("rows").innerHTML=records.map((r,i)=>"<tr><td>"+fmtDate(r.date)+"</td><td class='num' data-label='体重 (kg)'>"+(r.weight==null?"—":Number(r.weight).toFixed(1))+"</td><td class='num' data-label='ウエスト (cm)'>"+(r.waist==null?"—":Number(r.waist).toFixed(1))+"</td><td class='num' data-label='ヒップ (cm)'>"+(r.hip==null?"—":Number(r.hip).toFixed(1))+"</td><td class='num' data-label='14日平均 (kg)'>"+avgWeightThrough(r.date)+"</td><td class='action'><button class='del' type='button' data-index='"+i+"' aria-label='削除'>削除</button></td></tr>").join("");
  localStorage.setItem(KEY,JSON.stringify(records));
 }
 $("entryForm").addEventListener("submit",e=>{
  e.preventDefault();
- const date=$("date").value,w=$("weight").value,c=$("waist").value;
- if(!date||(!w&&!c)){alert("日付と、体重かウエストのどちらかを入力してください。");return}
+ const date=$("date").value,w=$("weight").value,c=$("waist").value,h=$("hip").value;
+ if(!date||(!w&&!c&&!h)){alert("日付と、体重・ウエスト・ヒップのいずれかを入力してください。");return}
  let r=records.find(x=>x.date===date);
- if(!r){r={date,weight:null,waist:null};records.push(r)}
- if(w)r.weight=Number(w); if(c)r.waist=Number(c);
- $("weight").value="";$("waist").value="";
+ if(!r){r={date,weight:null,waist:null,hip:null};records.push(r)}
+ if(w)r.weight=Number(w); if(c)r.waist=Number(c); if(h)r.hip=Number(h);
+ $("weight").value="";$("waist").value="";$("hip").value="";
  show();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
 });
@@ -137,12 +139,12 @@ $("rows").addEventListener("click",e=>{
 });
 $("backup").addEventListener("click",()=>{
  const blob=new Blob([JSON.stringify(records,null,2)],{type:"application/json"});
- const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="体重ウエスト記録バックアップ.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="体重ウエストヒップ記録バックアップ.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
 $("restore").addEventListener("click",()=>$("file").click());
 $("file").addEventListener("change",async e=>{
  const f=e.target.files[0];if(!f)return;
- try{const d=JSON.parse(await f.text());if(!Array.isArray(d)||d.some(r=>!/^\d{4}-\d\d-\d\d$/.test(r.date)||(!Number.isFinite(r.weight)&&r.weight!==null)||(!Number.isFinite(r.waist)&&r.waist!==null)))throw Error();
+ try{const d=JSON.parse(await f.text());if(!Array.isArray(d)||d.some(r=>!/^\d{4}-\d\d-\d\d$/.test(r.date)||(!Number.isFinite(r.weight)&&r.weight!==null)||(!Number.isFinite(r.waist)&&r.waist!==null)||(r.hip!=null&&!Number.isFinite(r.hip))))throw Error();
  if(confirm("現在の記録をバックアップの内容に置き換えますか？")){records=d;show()}
  }catch{alert("このバックアップファイルは読み込めませんでした。")}
  e.target.value="";
