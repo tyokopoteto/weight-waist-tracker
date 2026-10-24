@@ -96,7 +96,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}td.action{text-align:r
 </div>
 <p class="note">記録はこの端末のブラウザ内に保存され、ChatGPTには送信されません。端末やブラウザを変える場合は、バックアップを保存して読み込んでください。</p>
 </section>
-<footer class="app-version">アプリ バージョン <strong>1.2.0</strong></footer>
+<footer class="app-version">アプリ バージョン <strong>1.3.0</strong></footer>
 </main>
 <script>
 const KEY="weight-waist-tracker-phone-v1";
@@ -150,11 +150,11 @@ function drawChart(){
   xLabels=months.map((key,index)=>({position:index/(months.length-1),text:Number(key.slice(5,7))+"月",anchor:index===0?"start":index===11?"end":"middle"}));
  }else{
   if(chartPeriod==="week"){end=today;start=shiftDate(end,-6);days=7}
-  else{start=chartMonth+"-01";end=chartMonth===currentMonth?today:monthLastDay(chartMonth);days=Number(end.slice(8,10));}
+  else{start=chartMonth+"-01";end=chartMonth===currentMonth?today:monthLastDay(chartMonth);days=Number(monthLastDay(chartMonth).slice(8,10));}
   points=records.filter(r=>r.date>=start&&r.date<=end).map(r=>({date:r.date,value:Number(r[chartField])})).filter(p=>Number.isFinite(p.value)&&p.value>0).sort((a,b)=>a.date.localeCompare(b.date));
   periodLabel=chartPeriod==="week"?fmtDate(start)+" 〜 "+fmtDate(end)+" ・ "+points.length+"件":monthText(chartMonth)+" ・ "+points.length+"件";
   if(chartPeriod==="week")xLabels=Array.from({length:7},(_,i)=>{const d=shiftDate(start,i);return {position:i/6,text:Number(d.slice(8,10)),anchor:i===0?"start":i===6?"end":"middle"}});
-  else{xLabels=[{position:0,text:"1日",anchor:"start"},{position:0.5,text:Math.ceil(days/2)+"日",anchor:"middle"},{position:1,text:days+"日",anchor:"end"}];}
+  else{xLabels=Array.from({length:days},(_,i)=>({position:i/(days-1||1),text:String(i+1),anchor:i===0?"start":i===days-1?"end":"middle"}));}
  }
  const plotted=chartPeriod==="year"?points.filter(p=>p.value!==null):points;
  $("chartHeading").textContent=info.label+"の推移";$("chartBox").innerHTML="";$("chartRows").innerHTML="";
@@ -173,10 +173,10 @@ function drawChart(){
  if(chartPeriod!=="year"&&plotted.length>1)lineGroups.push(plotted);
  const lines=lineGroups.map(group=>'<polyline points="'+group.map(p=>x(p).toFixed(1)+","+y(p.value).toFixed(1)).join(" ")+'" fill="none" stroke="'+info.color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>').join("");
  const dots=plotted.map(p=>'<circle cx="'+x(p).toFixed(1)+'" cy="'+y(p.value).toFixed(1)+'" r="4.5" fill="'+info.color+'" stroke="#fff" stroke-width="2"/>').join("");
- const labels=xLabels.map(t=>'<text x="'+(L+t.position*innerW)+'" y="'+(H-10)+'" text-anchor="'+t.anchor+'" font-size="'+(chartPeriod==="year"?"8":"10")+'" fill="#65738a">'+t.text+'</text>').join("");
+ const labels=xLabels.map(t=>'<text x="'+(L+t.position*innerW)+'" y="'+(H-10)+'" text-anchor="'+t.anchor+'" font-size="'+(chartPeriod==="year"||chartPeriod==="month"?"8":"10")+'" fill="#65738a">'+t.text+'</text>').join("");
  const chartName=chartPeriod==="week"?"直近1週間":chartPeriod==="month"?monthText(chartMonth):"直近12か月の月平均";
  $("chartBox").innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+info.label+"の"+chartName+'グラフ">'+grid+lines+dots+labels+'</svg>';
- $("chartRows").innerHTML=plotted.map(p=>'<div class="chart-value"><time datetime="'+p.date+'">'+(chartPeriod==="year"?p.label:fmtDate(p.date))+'</time><strong>'+p.value.toFixed(1)+' '+info.unit+(chartPeriod==="year"?' ('+p.count+'日)':'')+'</strong></div>').join("");
+ if(chartPeriod!=="month")$("chartRows").innerHTML=plotted.map(p=>'<div class="chart-value"><time datetime="'+p.date+'">'+(chartPeriod==="year"?p.label:fmtDate(p.date))+'</time><strong>'+p.value.toFixed(1)+' '+info.unit+(chartPeriod==="year"?' ('+p.count+'日)':'')+'</strong></div>').join("");
 }
 function show(){
  records.sort((a,b)=>b.date.localeCompare(a.date));
@@ -207,7 +207,7 @@ $("entryForm").addEventListener("submit",e=>{
  if(w)r.weight=Number(w); if(c)r.waist=Number(c); if(h)r.hip=Number(h);
  $("weight").value="";$("waist").value="";$("hip").value="";
  show();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js?v=11").catch(()=>{});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js?v=12").catch(()=>{});
 });
 $("rows").addEventListener("click",e=>{
  const b=e.target.closest("[data-index]");if(!b)return;
@@ -227,7 +227,7 @@ $("file").addEventListener("change",async e=>{
  e.target.value="";
 });
 show();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js?v=11").catch(()=>{});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js?v=12").catch(()=>{});
 </script>
 </body>
 </html>

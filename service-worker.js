@@ -1,5 +1,5 @@
-const CACHE_NAME = "weight-waist-v11";
-const ASSETS = ["./?v=11", "./index.html", "./manifest.webmanifest", "./icon.svg"];
+const CACHE_NAME = "weight-waist-v12";
+const ASSETS = ["./?v=12", "./index.html", "./manifest.webmanifest", "./icon.svg"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
@@ -12,7 +12,7 @@ self.addEventListener("fetch", event => {
     event.respondWith(fetch(event.request).then(response => {
       caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
       return response;
-    }).catch(() => caches.match(event.request).then(cached => cached || caches.match(new URL("./?v=11", self.registration.scope).href))));
+    }).catch(() => caches.match(event.request).then(cached => cached || caches.match(new URL("./?v=12", self.registration.scope).href))));
     return;
   }
   event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
