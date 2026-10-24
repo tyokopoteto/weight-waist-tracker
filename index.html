@@ -171,7 +171,7 @@ $("entryForm").addEventListener("submit",e=>{
  if(w)r.weight=Number(w); if(c)r.waist=Number(c); if(h)r.hip=Number(h);
  $("weight").value="";$("waist").value="";$("hip").value="";
  show();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js?v=8").catch(()=>{});
 });
 $("rows").addEventListener("click",e=>{
  const b=e.target.closest("[data-index]");if(!b)return;
@@ -191,7 +191,7 @@ $("file").addEventListener("change",async e=>{
  e.target.value="";
 });
 show();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js?v=8").catch(()=>{});
 </script>
 </body>
 </html>
