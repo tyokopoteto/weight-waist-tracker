@@ -27,6 +27,7 @@ button{font:inherit;font-weight:650;border:0;border-radius:11px;padding:12px 15p
 .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .metric{border-radius:13px;background:#f0f5ff;padding:13px}
 .metric small{color:var(--muted);display:block;font-size:12px}.metric strong{display:block;font-size:25px;margin-top:3px}
+.chart-controls{display:grid;gap:10px;margin:6px 0 14px}.choices{display:flex;gap:6px;flex-wrap:wrap}.choice{background:#edf1f7;color:#40506a;padding:9px 12px;font-size:13px;min-height:40px}.choice[aria-pressed="true"]{background:var(--blue);color:#fff}.chart-box{width:100%;min-width:0}.chart-box svg{display:block;width:100%;height:auto;overflow:visible}.chart-meta{color:var(--muted);font-size:12px;margin:8px 2px 0}.chart-empty{color:var(--muted);text-align:center;padding:56px 12px;background:#f8faff;border-radius:12px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .secondary{background:#edf1f7;color:#334155;font-size:13px}
 table{border-collapse:collapse;width:100%;font-size:14px}
@@ -62,6 +63,23 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}td.action{text-align:r
 <div class="metric"><small>ウエスト・入力日数</small><strong id="avgWaist">—</strong><small id="countWaist">0日</small></div>
 <div class="metric"><small>ヒップ・入力日数</small><strong id="avgHip">—</strong><small id="countHip">0日</small></div>
 </div>
+</section>
+<section class="card" aria-labelledby="chartHeading">
+<h2 id="chartHeading">推移グラフ</h2>
+<div class="chart-controls">
+<div class="choices" role="group" aria-label="表示する項目">
+<button class="choice chart-field" type="button" data-field="weight" aria-pressed="true">体重</button>
+<button class="choice chart-field" type="button" data-field="waist" aria-pressed="false">ウエスト</button>
+<button class="choice chart-field" type="button" data-field="hip" aria-pressed="false">ヒップ</button>
+</div>
+<div class="choices" role="group" aria-label="表示期間">
+<button class="choice chart-range" type="button" data-days="7" aria-pressed="false">週</button>
+<button class="choice chart-range" type="button" data-days="30" aria-pressed="true">月</button>
+<button class="choice chart-range" type="button" data-days="365" aria-pressed="false">年</button>
+</div>
+</div>
+<div id="chartBox" class="chart-box"></div>
+<p id="chartMeta" class="chart-meta"></p>
 </section>
 <section class="card">
 <h2>記録一覧 <span id="recordCount" class="note"></span></h2>
@@ -105,6 +123,26 @@ $("date").value=localDate();
 function fmtDate(s){const [y,m,d]=s.split("-");return y+"年"+Number(m)+"月"+Number(d)+"日"}
 function shiftDate(s,days){const d=new Date(s+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10)}
 function avgWeightThrough(date){const start=shiftDate(date,-13);const vals=records.filter(r=>r.date>=start&&r.date<=date).map(r=>Number(r.weight)).filter(v=>Number.isFinite(v)&&v>0);return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):"—"}
+let chartField="weight",chartDays=30;
+const chartInfo={weight:{label:"体重",unit:"kg",color:"#2563eb"},waist:{label:"ウエスト",unit:"cm",color:"#e07b39"},hip:{label:"ヒップ",unit:"cm",color:"#8b5cf6"}};
+function drawChart(){
+ const info=chartInfo[chartField],end=localDate(),start=shiftDate(end,1-chartDays);
+ const points=records.filter(r=>r.date>=start&&r.date<=end&&Number.isFinite(Number(r[chartField]))&&Number(r[chartField])>0).map(r=>({date:r.date,value:Number(r[chartField])})).sort((a,b)=>a.date.localeCompare(b.date));
+ $("chartHeading").textContent=info.label+"の推移";$("chartBox").innerHTML="";
+ $("chartMeta").textContent=fmtDate(start)+" 〜 "+fmtDate(end)+" ・ "+points.length+"件";
+ if(!points.length){$("chartBox").innerHTML='<div class="chart-empty">この期間の'+info.label+'の記録はありません。</div>';return}
+ const W=360,H=230,L=48,R=12,T=20,B=34,innerW=W-L-R,innerH=H-T-B;
+ let min=Math.min(...points.map(p=>p.value)),max=Math.max(...points.map(p=>p.value));
+ const pad=max===min?(chartField==="weight"?0.5:1):Math.max((max-min)*0.18,chartField==="weight"?0.2:0.5);min=Math.max(0,min-pad);max+=pad;
+ const x=p=>L+((Date.parse(p.date+"T00:00:00Z")-Date.parse(start+"T00:00:00Z"))/(chartDays-1||1))*innerW;
+ const y=v=>T+(max-v)/(max-min||1)*innerH;
+ const ticks=[min,(min+max)/2,max];
+ const grid=ticks.map(v=>'<line x1="'+L+'" y1="'+y(v)+'" x2="'+(W-R)+'" y2="'+y(v)+'" stroke="#e2e8f0" stroke-dasharray="3 4"/><text x="'+(L-7)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="#65738a">'+v.toFixed(1)+'</text>').join("");
+ const path=points.map((p,i)=>(i?"L":"M")+x(p).toFixed(1)+","+y(p.value).toFixed(1)).join(" ");
+ const dots=points.map(p=>'<circle cx="'+x(p).toFixed(1)+'" cy="'+y(p.value).toFixed(1)+'" r="4" fill="#fff" stroke="'+info.color+'" stroke-width="2"><title>'+fmtDate(p.date)+"　"+p.value.toFixed(1)+" "+info.unit+'</title></circle>').join("");
+ const xLabels='<text x="'+L+'" y="'+(H-9)+'" text-anchor="start" font-size="11" fill="#65738a">'+Number(start.slice(5,7))+"/"+Number(start.slice(8,10))+'</text><text x="'+(W-R)+'" y="'+(H-9)+'" text-anchor="end" font-size="11" fill="#65738a">'+Number(end.slice(5,7))+"/"+Number(end.slice(8,10))+'</text>';
+ $("chartBox").innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+info.label+"の"+(chartDays===7?"1週間":chartDays===30?"1か月":"1年間")+'の推移グラフ">'+grid+'<path d="'+path+'" fill="none" stroke="'+info.color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+dots+xLabels+'</svg>';
+}
 function show(){
  records.sort((a,b)=>b.date.localeCompare(a.date));
  const today=localDate(),from=new Date();from.setDate(from.getDate()-13);
@@ -119,8 +157,11 @@ function show(){
  $("recordCount").textContent="("+records.length+"件)";
  $("empty").hidden=records.length>0;
  $("rows").innerHTML=records.map((r,i)=>"<tr><td>"+fmtDate(r.date)+"</td><td class='num' data-label='体重 (kg)'>"+(r.weight==null?"—":Number(r.weight).toFixed(1))+"</td><td class='num' data-label='ウエスト (cm)'>"+(r.waist==null?"—":Number(r.waist).toFixed(1))+"</td><td class='num' data-label='ヒップ (cm)'>"+(r.hip==null?"—":Number(r.hip).toFixed(1))+"</td><td class='num' data-label='14日平均 (kg)'>"+avgWeightThrough(r.date)+"</td><td class='action'><button class='del' type='button' data-index='"+i+"' aria-label='削除'>削除</button></td></tr>").join("");
+ drawChart();
  localStorage.setItem(KEY,JSON.stringify(records));
 }
+document.querySelectorAll(".chart-field").forEach(b=>b.addEventListener("click",()=>{chartField=b.dataset.field;document.querySelectorAll(".chart-field").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));drawChart()}));
+document.querySelectorAll(".chart-range").forEach(b=>b.addEventListener("click",()=>{chartDays=Number(b.dataset.days);document.querySelectorAll(".chart-range").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));drawChart()}));
 $("entryForm").addEventListener("submit",e=>{
  e.preventDefault();
  const date=$("date").value,w=$("weight").value,c=$("waist").value,h=$("hip").value;
